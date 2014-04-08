@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,17 +19,69 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Created by Aspart on 08.03.14.
- */
 public class BluetoothConnector {
+
+        // Send msg for time
+        private class SendMsgForTimeTask extends AsyncTask<String, Integer, String> {
+            int runningtime;
+            byte[] msg;
+
+            SendMsgForTimeTask(int runningtime, byte[] msg) {
+                this.runningtime = runningtime;
+                this.msg = msg;
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                int loop = 1;
+                long StartTime = System.currentTimeMillis() / 1000;
+                for (int i = 0; i < loop; ++i) {
+                    if(!isCancelled()) {
+                        try {
+                            if(mOutputStream != null) {
+                                mOutputStream.write(msg);
+                            }
+                        }
+                        catch (Exception e) {
+
+                        }
+                        loop++;
+                        if (runningtime < ((System.currentTimeMillis() / 1000) - StartTime)) {
+                            loop = 0;
+                        }
+                    }
+                }
+                return "";
+            }
+        }
+
+    // Send single msg
+    private class SendMsgTask extends AsyncTask<String, Integer, String> {
+        byte[] msg;
+
+        SendMsgTask(byte[] msg) {
+            this.msg = msg;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                if(mOutputStream != null) {
+                    mOutputStream.write(msg);
+                }
+            }
+            catch (Exception e) {
+
+            }
+            return "";
+        }
+    }
+
     private BluetoothAdapter mAdapter;  // this device adapter
     private BluetoothDevice mDevice;    // device to recieve data
     private BluetoothSocket mSocket;    // and its interface
     private OutputStream mOutputStream;
-    private InputStream mInputStream;
-
-    private ArrayList<String> mArrayAdapter;
+    private SendMsgForTimeTask mCurrentTimeTask;
 
     public BluetoothConnector(BluetoothAdapter bluetoothAdapter) {
         if(bluetoothAdapter == null)
@@ -40,9 +93,16 @@ public class BluetoothConnector {
         return mAdapter.isEnabled();
     }
 
+    boolean isActive() {
+        if(mSocket!=null)
+            return mSocket.isConnected();
+        else
+            return false;
+    }
+
     public ArrayList<String> getPaired() throws RuntimeException
     {
-        mArrayAdapter = new ArrayList<String>();
+        ArrayList<String> mArrayAdapter = new ArrayList<String>();
         if(mAdapter == null)
             return mArrayAdapter;
         Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
@@ -58,6 +118,11 @@ public class BluetoothConnector {
         return mArrayAdapter;
     }
 
+    void cancelTask() {
+        if(mCurrentTimeTask != null)
+            mCurrentTimeTask.cancel(true);
+    }
+
     void connect() throws IOException
     {
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
@@ -65,7 +130,9 @@ public class BluetoothConnector {
             return;
         mSocket = mDevice.createRfcommSocketToServiceRecord(uuid);
         try {
+            //mAdapter.cancelDiscovery();
             mSocket.connect();
+            mOutputStream = mSocket.getOutputStream();
         }
         catch (IOException connectException) {
             // Unable to connect; close the socket and get out
@@ -73,10 +140,8 @@ public class BluetoothConnector {
                 mSocket.close();
             }
             catch (IOException closeException) {
-
             }
         }
-        mOutputStream = mSocket.getOutputStream();
     }
 
     void close() throws IOException
@@ -87,28 +152,17 @@ public class BluetoothConnector {
             mSocket.close();
     }
 
-    void send(byte[] msg) throws IOException, InterruptedException {
-        if(mOutputStream != null) {
-            int c = 1;
-            while(c<10) {
-//                mOutputStream.write(msg);
-//                Thread.sleep(1, 0);
-//                mOutputStream.write(msg);
-//                Thread.sleep(2, 0);
-//                mOutputStream.write(msg);
-//                Thread.sleep(5, 0);
-                mOutputStream.write(msg);
-//                mOutputStream.write(msg);
-//                Thread.sleep(20, 0);
-//                mOutputStream.write(msg);
-//                Thread.sleep(50, 0);
-//                mOutputStream.write(msg);
-//                Thread.sleep(100, 0);
-//                mOutputStream.write(msg);
-//                Thread.sleep(1000);
-                c++;
-            }
+    void send(int time, byte[] msg) throws IOException, InterruptedException {
+        if(time==0)
+            send(msg);
+        else {
+            mCurrentTimeTask = new SendMsgForTimeTask(time, msg);
+            mCurrentTimeTask.execute();
         }
+    }
+    void send(byte[] msg) throws IOException, InterruptedException {
+        //new SendMsgTask(msg).execute();
+        mOutputStream.write(msg);
     }
 
 

@@ -5,6 +5,10 @@ import java.util.Locale;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -19,14 +23,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
-
+import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
     private final static int REQUEST_ENABLE_BT = 1;
+
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -167,6 +170,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
         private BluetoothConnector mBluetoothConnector;
+        private Interruptor mInterruptor;
         /**
          * Returns a new instance of this fragment for the given section
          * number.
@@ -182,13 +186,23 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         public IterFragment() {
         }
 
-        private void addVolSeekBarListener (int seekBar, int textView) {
+        double calcLogVal(double progress, double min, double max) {
+            double minLog = Math.log(min);
+            double maxLog = Math.log(max);
+            double retval = Math.exp(minLog+((progress-min)*(maxLog-minLog)/(max-min)));
+            return retval;
+        }
+
+        private void addFreqSeekBarListener (int seekBar, int textView) {
             final SeekBar sk=(SeekBar) getView().findViewById(seekBar);
             final TextView tv = (TextView) getView().findViewById(textView);
-            tv.setText(Integer.toString(sk.getProgress()));
+            double current = (double)(sk.getProgress()+1)/(sk.getMax()+1)*Interruptor.MAX_FREQUENCY;
+            int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_FREQUENCY, Interruptor.MAX_FREQUENCY));
+            if(mInterruptor != null)
+                mInterruptor.setFrequency(val);
+            tv.setText(Integer.toString(val));
             if(sk != null && tv != null)
                 sk.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
                     @Override
                     public void onStopTrackingTouch(SeekBar seekBar) {
                         // TODO Auto-generated method stub
@@ -202,64 +216,166 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         // TODO Auto-generated method stub
-                        tv.setText(Integer.toString(progress));
+                        double current = (double)(progress+1)/(sk.getMax()+1)*Interruptor.MAX_FREQUENCY;
+                        int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_FREQUENCY, Interruptor.MAX_FREQUENCY));
+                        tv.setText(Integer.toString(val));
+                        if(mInterruptor != null) {
+                            mInterruptor.setFrequency(val);
+                        }
                     }
                 });
         }
 
+        private void addVolSeekBarListener (int seekBar, int textView) {
+            final SeekBar sk=(SeekBar) getView().findViewById(seekBar);
+            int vol = (int)Math.ceil((double)sk.getProgress()/sk.getMax()*Interruptor.MAX_VOLUME);
+            if(mInterruptor != null)
+                mInterruptor.setVolume(vol);
+            final TextView tv = (TextView) getView().findViewById(textView);
+            tv.setText(Integer.toString(sk.getProgress()));
+            if(sk != null && tv != null)
+                sk.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        // TODO Auto-generated method stub
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                        // TODO Auto-generated method stub
+                    }
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        // TODO Auto-generated method stub
+                        int val = (int)Math.ceil((double)progress/sk.getMax()*Interruptor.MAX_VOLUME);
+                        tv.setText(Integer.toString(progress));
+                        if(mInterruptor != null) {
+                            mInterruptor.setVolume(val);
+                        }
+                    }
+                });
+        }
+
+        private void addTimeSeekBarListener (int seekBar, int textView) {
+            final SeekBar sk=(SeekBar) getView().findViewById(seekBar);
+            final TextView tv = (TextView) getView().findViewById(textView);
+            double current = (double)(sk.getProgress()+1)/(sk.getMax()+1)*Interruptor.MAX_TIME;
+            int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_TIME, Interruptor.MAX_TIME));
+            tv.setText(Integer.toString(val));
+            if(mInterruptor != null)
+                mInterruptor.setTime(val);
+            if(sk != null && tv != null) {
+                sk.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        // TODO Auto-generated method stub
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                        // TODO Auto-generated method stub
+                    }
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        // TODO Auto-generated method stub
+                        double current = (double)(progress+1)/(sk.getMax()+1)*Interruptor.MAX_TIME;
+                        int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_TIME, Interruptor.MAX_TIME));
+                        if(mInterruptor != null) {
+                            mInterruptor.setTime(val);
+                        }
+                        tv.setText(Integer.toString(val));
+                    }
+                });
+            }
+        }
+
         private void addConnectButtonListener () {
-            Button button= (Button) getView().findViewById(R.id.connectButton);
+            final Button button= (Button) getView().findViewById(R.id.connectButton);
             if(button != null)
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(mBluetoothConnector == null) {
-                            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                            if (bluetoothAdapter == null) {
-                                return;
-                            }
-                            mBluetoothConnector = new BluetoothConnector(bluetoothAdapter);
-                        }
-
                         if (!mBluetoothConnector.isBTEnabled()) {
                             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
                         }
-
-                        try {
-                            mBluetoothConnector.getPaired();
-                            mBluetoothConnector.connect();
+                        if(mBluetoothConnector.isActive()) {
+                            try {
+                                mBluetoothConnector.close();
+                                button.setText("Connect");
+                            }
+                            catch(Exception e) {
+                                throw new RuntimeException(e);
+                            }
                         }
-                        catch (IOException e) {
-                            throw new RuntimeException(e);
+                        else {
+                            try {
+                                mBluetoothConnector.getPaired();
+                                mBluetoothConnector.connect();
+                                button.setText("Disconnect");
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
                     }
                 });
         }
 
-        private void addSendButtonListener () {
-            Button button= (Button) getView().findViewById(R.id.sendButton);
+        private void addSingleButtonListener () {
+            Button button= (Button) getView().findViewById(R.id.singleButton);
             if(button != null)
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         try {
-                            if(mBluetoothConnector != null) {
-                                int i = 0;
-                                try {
-                                    mBluetoothConnector.send("a".getBytes());
-                                }
-                                catch (InterruptedException e) {
-                                }
-                            }
-                         }
-                        catch (IOException e) {
-                            throw new RuntimeException(e);
+                            mInterruptor.setActive(false);
+                            mInterruptor.send();
+                        }
+                        catch(IOException e) {
+                            System.out.println("IO error in setOnClickListener");
+                        }
+                        catch (InterruptedException e) {
+                            System.out.println("Interrupted error in setOnClickListener");
+                        }
+                        catch (NullPointerException e) {
+                            System.out.println("NULL interrupter error");
                         }
                     }
                 });
         }
 
+        private void addLoopButtonListener () {
+            final Button button= (Button) getView().findViewById(R.id.loopButton);
+            if(button != null)
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(mInterruptor.isActive()) {
+                            mInterruptor.setActive(false);
+                            try {
+                                mInterruptor.send();
+                            }
+                            catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                            button.setText("Loop");
+                            button.setBackgroundColor(Color.DKGRAY);
+                        }
+                        else {
+                            mInterruptor.setActive(true);
+                            try {
+                                mInterruptor.send();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                            button.setText("Off");
+                            button.setBackgroundColor(Color.RED);
+                        }
+                    }
+                });
+        }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -267,18 +383,29 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             return inflater.inflate(R.layout.fragment_iter, container, false);
         }
 
+        private void getBluetoothConnector() {
+            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (bluetoothAdapter == null) {
+                return;
+            }
+            mBluetoothConnector = new BluetoothConnector(bluetoothAdapter);
+        }
+
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
+            getBluetoothConnector();
+            mInterruptor = new Interruptor();
+            mInterruptor.setBluetoothConnector(mBluetoothConnector);
             // seek bars listeners - send arguments to profiler class
-            // TODO: add profiler class
             addVolSeekBarListener(R.id.volSeekBar, R.id.volView);
-            addVolSeekBarListener(R.id.freqSeekBar, R.id.freqView);
-            addVolSeekBarListener(R.id.timeSeekBar, R.id.timeView);
+            addFreqSeekBarListener(R.id.freqSeekBar, R.id.freqView);
+            addTimeSeekBarListener(R.id.timeSeekBar, R.id.timeView);
             // button listeners - provide BT interface
             addConnectButtonListener();
-            addSendButtonListener();
-        }
+            addSingleButtonListener();
+            addLoopButtonListener();
+            }
     }
 
     public static class MIDIFragment extends Fragment {
@@ -301,12 +428,36 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         }
 
         public MIDIFragment() {
+
+        }
+
+        private void addOpenButtonListener () {
+            Button openButton= (Button) getView().findViewById(R.id.openButton);
+            openButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    OpenFileDialog fileDialog = new OpenFileDialog(getActivity())
+                            .setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
+                                @Override
+                                public void OnSelectedFile(String fileName) {
+                                    System.out.println(fileName);
+                                }
+                            });
+                    fileDialog.show();
+                }
+            });
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             return inflater.inflate(R.layout.fragment_midi, container, false);
+        }
+
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+            addOpenButtonListener();
         }
     }
 }
