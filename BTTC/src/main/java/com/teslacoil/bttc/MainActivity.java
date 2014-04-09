@@ -2,17 +2,25 @@ package com.teslacoil.bttc;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Set;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
@@ -305,19 +313,41 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             try {
                                 mBluetoothConnector.close();
                                 button.setText("Connect");
+                                Toast.makeText(getActivity(), "Disconnected", Toast.LENGTH_LONG).show();
                             }
                             catch(Exception e) {
                                 throw new RuntimeException(e);
                             }
                         }
                         else {
-                            try {
-                                mBluetoothConnector.getPaired();
-                                mBluetoothConnector.connect();
-                                button.setText("Disconnect");
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
+                            final Set<BluetoothDevice> bondedDevices = mBluetoothConnector.getPaired();
+
+                            final String[] mDevicesName = new String[bondedDevices.size()];
+                            int i = 0;
+                            for(BluetoothDevice d : bondedDevices) {
+                                mDevicesName[i] = d.getName();
+                                i++;
                             }
+
+                            new AlertDialog.Builder(getActivity())
+                                    .setTitle("Select device")
+                                    .setItems(mDevicesName, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int item) {
+                                            try {
+                                                boolean ret = mBluetoothConnector.connectDevice((BluetoothDevice)bondedDevices.toArray()[item]);
+                                                if(ret) {
+                                                    button.setText("Disconnect");
+                                                    Toast.makeText(getActivity(), "Conected", Toast.LENGTH_LONG).show();
+                                                }
+                                                else {
+                                                    Toast.makeText(getActivity(), "Filed to connect", Toast.LENGTH_LONG).show();
+                                                }
+                                            } catch (IOException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                        }
+                                    }).setCancelable(true).setNegativeButton("Cancel", null).create().show();
                         }
                     }
                 });
@@ -405,6 +435,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             addConnectButtonListener();
             addSingleButtonListener();
             addLoopButtonListener();
+
             }
     }
 

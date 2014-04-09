@@ -2,6 +2,7 @@ package com.teslacoil.bttc;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -11,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,6 +84,7 @@ public class BluetoothConnector {
     private BluetoothSocket mSocket;    // and its interface
     private OutputStream mOutputStream;
     private SendMsgForTimeTask mCurrentTimeTask;
+    private Set<BluetoothDevice> mBondedDevices;
 
     public BluetoothConnector(BluetoothAdapter bluetoothAdapter) {
         if(bluetoothAdapter == null)
@@ -92,7 +95,6 @@ public class BluetoothConnector {
     boolean isBTEnabled() {
         return mAdapter.isEnabled();
     }
-
     boolean isActive() {
         if(mSocket!=null)
             return mSocket.isConnected();
@@ -100,48 +102,58 @@ public class BluetoothConnector {
             return false;
     }
 
-    public ArrayList<String> getPaired() throws RuntimeException
+    public Set<BluetoothDevice> getPaired() throws RuntimeException
     {
-        ArrayList<String> mArrayAdapter = new ArrayList<String>();
         if(mAdapter == null)
-            return mArrayAdapter;
-        Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
+            return null;
+        mBondedDevices = mAdapter.getBondedDevices();
+        return mBondedDevices;
+    }
+
+    public boolean connectDevice(BluetoothDevice device) throws IOException {
+        final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
         // If there are paired devices
-        if (pairedDevices.size() > 0) {
+        if(mBondedDevices == null)
+            return false;
+        if (mBondedDevices.size() > 0) {
             // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices) {
-                if("linvor".equals(device.getName())) {
+            for (BluetoothDevice d : mBondedDevices) {
+                if(d.equals(device)) {
                     mDevice = device;
+                    break;
                 }
             }
         }
-        return mArrayAdapter;
-    }
 
-    void cancelTask() {
-        if(mCurrentTimeTask != null)
-            mCurrentTimeTask.cancel(true);
-    }
-
-    void connect() throws IOException
-    {
-        UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
         if (mDevice == null)
-            return;
+            return false;
+
         mSocket = mDevice.createRfcommSocketToServiceRecord(uuid);
+
         try {
-            //mAdapter.cancelDiscovery();
+            if(mAdapter.isDiscovering())
+                mAdapter.cancelDiscovery();
             mSocket.connect();
+            if(!mSocket.isConnected())
+                return false;
             mOutputStream = mSocket.getOutputStream();
+            return true;
         }
         catch (IOException connectException) {
             // Unable to connect; close the socket and get out
             try {
                 mSocket.close();
+                return false;
             }
             catch (IOException closeException) {
             }
         }
+        return false;
+    }
+
+    void cancelTask() {
+        if(mCurrentTimeTask != null)
+            mCurrentTimeTask.cancel(true);
     }
 
     void close() throws IOException
