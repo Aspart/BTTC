@@ -335,12 +335,11 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                                         @Override
                                         public void onClick(DialogInterface dialog, int item) {
                                             try {
-                                                boolean ret = mBluetoothConnector.connectDevice((BluetoothDevice)bondedDevices.toArray()[item]);
-                                                if(ret) {
+                                                boolean ret = mBluetoothConnector.connectDevice((BluetoothDevice) bondedDevices.toArray()[item]);
+                                                if (ret) {
                                                     button.setText("Disconnect");
                                                     Toast.makeText(getActivity(), "Conected", Toast.LENGTH_LONG).show();
-                                                }
-                                                else {
+                                                } else {
                                                     Toast.makeText(getActivity(), "Filed to connect", Toast.LENGTH_LONG).show();
                                                 }
                                             } catch (IOException e) {
@@ -445,7 +444,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
          * fragment.
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
-
+        private MIDIPlayer mMidiPlayer;
         /**
          * Returns a new instance of this fragment for the given section
          * number.
@@ -462,6 +461,36 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
         }
 
+        private void addStopButtonListener () {
+            Button stopButton= (Button) getView().findViewById(R.id.stopButton);
+            stopButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(mMidiPlayer != null)
+                        mMidiPlayer.reset();
+                }
+            });
+        }
+
+        private void addPlayButtonListener () {
+            final Button playButton= (Button) getView().findViewById(R.id.playButton);
+            playButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(mMidiPlayer != null) {
+                        if(mMidiPlayer.isRunning()) {
+                            mMidiPlayer.stop();
+                            playButton.setText("Play");
+                        }
+                        else {
+                            mMidiPlayer.start();
+                            playButton.setText("Pause");
+                        }
+                    }
+                }
+            });
+        }
+
         private void addOpenButtonListener () {
             Button openButton= (Button) getView().findViewById(R.id.openButton);
             openButton.setOnClickListener(new View.OnClickListener() {
@@ -471,7 +500,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             .setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
                                 @Override
                                 public void OnSelectedFile(String fileName) {
-                                    System.out.println(fileName);
+                                    mMidiPlayer = new MIDIPlayer(fileName);
+                                    mMidiPlayer.run(fileName);
                                 }
                             });
                     fileDialog.show();
@@ -489,6 +519,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
             addOpenButtonListener();
+            addPlayButtonListener();
+            addStopButtonListener();
         }
     }
 }

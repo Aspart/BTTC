@@ -51,14 +51,6 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Stop"
-        android:id="@+id/stopButton"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/playButton" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="Open"
         android:id="@+id/openButton"
         android:layout_alignParentBottom="true"
@@ -83,23 +75,12 @@
         android:layout_alignParentStart="true"
         android:text="Sample Track Name" />
 
-    <SeekBar
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/progressBar"
-        android:layout_above="@+id/volumeSeekBar"
-        android:layout_toRightOf="@+id/textView"
-        android:layout_alignRight="@+id/volumeSeekBar"
-        android:layout_alignEnd="@+id/volumeSeekBar"
-        android:indeterminate="false" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Prs"
-        android:id="@+id/textView2"
-        android:layout_alignTop="@+id/progressBar"
-        android:layout_toRightOf="@+id/trackName" />
+        android:text="Stop"
+        android:id="@+id/stopButton"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/playButton" />
 
 </RelativeLayout>
