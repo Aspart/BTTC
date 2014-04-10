@@ -1,7 +1,5 @@
 package com.teslacoil.bttc;
 
-import java.io.IOException;
-
 public class Interruptor {
     public final static int MIN_VOLUME = 0;
     public final static int MAX_VOLUME = 255;
@@ -74,7 +72,7 @@ public class Interruptor {
         setFrequency(freq);
     }
 
-    public void send(int vol, int freq) throws IOException, InterruptedException {
+    public void send(int vol, int freq) {
         setVolume(vol);
         setFrequency(freq);
         send();

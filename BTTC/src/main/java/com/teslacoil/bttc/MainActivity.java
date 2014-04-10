@@ -30,7 +30,8 @@ import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
     private final static int REQUEST_ENABLE_BT = 1;
-
+    public static BluetoothConnector bluetoothConnector;
+    public static Interruptor interruptor;
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -170,8 +171,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
          * fragment.
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
-        private BluetoothConnector mBluetoothConnector;
-        private Interruptor mInterruptor;
+
         /**
          * Returns a new instance of this fragment for the given section
          * number.
@@ -182,6 +182,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
             return fragment;
+
         }
 
         public IterFragment() {
@@ -199,8 +200,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             final TextView tv = (TextView) getView().findViewById(textView);
             double current = (double)(sk.getProgress()+1)/(sk.getMax()+1)*Interruptor.MAX_FREQUENCY;
             int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_FREQUENCY, Interruptor.MAX_FREQUENCY));
-            if(mInterruptor != null)
-                mInterruptor.setFrequency(val);
+            if(interruptor != null)
+                interruptor.setFrequency(val);
             tv.setText(Integer.toString(val));
             if(sk != null && tv != null)
                 sk.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -220,8 +221,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                         double current = (double)(progress+1)/(sk.getMax()+1)*Interruptor.MAX_FREQUENCY;
                         int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_FREQUENCY, Interruptor.MAX_FREQUENCY));
                         tv.setText(Integer.toString(val));
-                        if(mInterruptor != null) {
-                            mInterruptor.setFrequency(val);
+                        if(interruptor != null) {
+                            interruptor.setFrequency(val);
                         }
                     }
                 });
@@ -230,8 +231,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         private void addVolSeekBarListener (int seekBar, int textView) {
             final SeekBar sk=(SeekBar) getView().findViewById(seekBar);
             int vol = (int)Math.ceil((double)sk.getProgress()/sk.getMax()*Interruptor.MAX_VOLUME);
-            if(mInterruptor != null)
-                mInterruptor.setVolume(vol);
+            if(interruptor != null)
+                interruptor.setVolume(vol);
             final TextView tv = (TextView) getView().findViewById(textView);
             tv.setText(Integer.toString(sk.getProgress()));
             if(sk != null && tv != null)
@@ -251,8 +252,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                         // TODO Auto-generated method stub
                         int val = (int)Math.ceil((double)progress/sk.getMax()*Interruptor.MAX_VOLUME);
                         tv.setText(Integer.toString(progress));
-                        if(mInterruptor != null) {
-                            mInterruptor.setVolume(val);
+                        if(interruptor != null) {
+                            interruptor.setVolume(val);
                         }
                     }
                 });
@@ -264,8 +265,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             double current = (double)(sk.getProgress()+1)/(sk.getMax()+1)*Interruptor.MAX_TIME;
             int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_TIME, Interruptor.MAX_TIME));
             tv.setText(Integer.toString(val));
-            if(mInterruptor != null)
-                mInterruptor.setTime(val);
+            if(interruptor != null)
+                interruptor.setTime(val);
             if(sk != null && tv != null) {
                 sk.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
@@ -283,8 +284,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                         // TODO Auto-generated method stub
                         double current = (double)(progress+1)/(sk.getMax()+1)*Interruptor.MAX_TIME;
                         int val = (int)Math.ceil(calcLogVal(current, Interruptor.MIN_TIME, Interruptor.MAX_TIME));
-                        if(mInterruptor != null) {
-                            mInterruptor.setTime(val);
+                        if(interruptor != null) {
+                            interruptor.setTime(val);
                         }
                         tv.setText(Integer.toString(val));
                     }
@@ -298,13 +299,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (!mBluetoothConnector.isEnabled()) {
+                        if (!bluetoothConnector.isEnabled()) {
                             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
                         }
-                        if(mBluetoothConnector.isConnected()) {
+                        if(bluetoothConnector.isConnected()) {
                             try {
-                                mBluetoothConnector.close();
+                                bluetoothConnector.close();
                                 button.setText("Connect");
                                 Toast.makeText(getActivity(), "Disconnected", Toast.LENGTH_LONG).show();
                             }
@@ -313,7 +314,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             }
                         }
                         else {
-                            final Set<BluetoothDevice> bondedDevices = mBluetoothConnector.getPaired();
+                            final Set<BluetoothDevice> bondedDevices = bluetoothConnector.getPaired();
 
                             final String[] mDevicesName = new String[bondedDevices.size()];
                             int i = 0;
@@ -328,7 +329,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                                         @Override
                                         public void onClick(DialogInterface dialog, int item) {
                                             try {
-                                                boolean ret = mBluetoothConnector.connectDevice((BluetoothDevice) bondedDevices.toArray()[item]);
+                                                boolean ret = bluetoothConnector.connectDevice((BluetoothDevice) bondedDevices.toArray()[item]);
                                                 if (ret) {
                                                     button.setText("Disconnect");
                                                     Toast.makeText(getActivity(), "Conected", Toast.LENGTH_LONG).show();
@@ -351,8 +352,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mInterruptor.enable();
-                        mInterruptor.send();
+                        interruptor.enable();
+                        interruptor.send();
                     }
                 });
         }
@@ -363,17 +364,18 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(mInterruptor.isEnabled()) {
-                            mInterruptor.disable();
-                            mInterruptor.send();
+                        if(interruptor.isEnabled()) {
+                            interruptor.disable();
+                            interruptor.send();
                             button.setText("Loop");
-                            button.setBackgroundColor(Color.DKGRAY);
+                            button.setTextColor(Color.WHITE);
                         }
                         else {
-                            mInterruptor.enable();
-                            mInterruptor.send();
+                            interruptor.enable();
+                            interruptor.send();
                             button.setText("Off");
-                            button.setBackgroundColor(Color.RED);
+                            button.setTextColor(Color.RED);
+                            button.setTextScaleX(1.15f);
                         }
                     }
                 });
@@ -390,15 +392,15 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             if (bluetoothAdapter == null) {
                 return;
             }
-            mBluetoothConnector = new BluetoothConnector(bluetoothAdapter);
+            bluetoothConnector = new BluetoothConnector(bluetoothAdapter);
         }
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
             getBluetoothConnector();
-            mInterruptor = new Interruptor();
-            mInterruptor.setBluetoothConnector(mBluetoothConnector);
+            interruptor = new Interruptor();
+            interruptor.setBluetoothConnector(bluetoothConnector);
             // seek bars listeners - send arguments to profiler class
             addVolSeekBarListener(R.id.volSeekBar, R.id.volView);
             addFreqSeekBarListener(R.id.freqSeekBar, R.id.freqView);
@@ -473,8 +475,10 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             .setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
                                 @Override
                                 public void OnSelectedFile(String fileName) {
-                                    mMidiPlayer = new MIDIPlayer(fileName);
+                                    mMidiPlayer = new MIDIPlayer(fileName, interruptor);
                                     mMidiPlayer.run(fileName);
+                                    TextView tv = (TextView) getView().findViewById(R.id.trackName);
+                                    tv.setText(mMidiPlayer.getTrackName());
                                 }
                             });
                     fileDialog.show();

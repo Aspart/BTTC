@@ -12,15 +12,18 @@ import com.leff.midi.util.MidiEventListener;
 import com.leff.midi.util.MidiProcessor;
 
 public class MIDIPlayer implements MidiEventListener {
-    MidiProcessor mProcessor;
+    private MidiProcessor mProcessor;
     private String mLabel;
+    private String mFileName;
+    private Interruptor mInterruptor;
     public static double getFreqFromMidiNote(int d) {
         return Math.pow(2, (d-69)/12)*440;
     }
 
-    public MIDIPlayer(String label)
+    public MIDIPlayer(String label, Interruptor interruptor)
     {
         mLabel = label;
+        mInterruptor = interruptor;
     }
 
     // 0. Implement the listener functions that will be called by the
@@ -45,9 +48,8 @@ public class MIDIPlayer implements MidiEventListener {
         int value = noteOn.getNoteValue();
         int velocity = noteOn.getVelocity();
         int channel = noteOn.getChannel();
-        int type = noteOn.getType();
         Log.w("myApp",mLabel + " received event: freq " + getFreqFromMidiNote(value) + " velocity " +velocity + " channel " + channel);
-
+        mInterruptor.send(velocity,value);
     }
 
     @Override
@@ -77,35 +79,33 @@ public class MIDIPlayer implements MidiEventListener {
     }
 
     String getTrackName() {
+        return mFileName;
+    }
+    String getLabel() {
         return mLabel;
     }
 
     boolean isRunning() {
         return mProcessor.isRunning();
     }
+
     public void run(String midiFile)
     {
         // 1. Read in a MidiFile
         MidiFile midi = null;
         try
         {
-            midi = new MidiFile(new File(midiFile));
+            File fp = new File(midiFile);
+            mFileName = fp.getName();
+            midi = new MidiFile(fp);
         }
         catch(IOException e)
         {
-            return;
+            Log.e("MIDI run", e.getMessage());
         }
-
         // 2. Create a MidiProcessor
         mProcessor = new MidiProcessor(midi);
-
-        // 3. Register listeners for the events you're interested in
-//        EventPrinter ep = new EventPrinter("Individual Listener");
-//        processor.registerEventListener(ep, Tempo.class);
-//        processor.registerEventListener(ep, NoteOn.class);
-
-        // or listen for all events:
-        MIDIPlayer ep = new MIDIPlayer("Listener For All");
-        mProcessor.registerEventListener(ep, NoteOn.class);
+        // 3. Register listeners for NoteOn events:
+        mProcessor.registerEventListener(this, NoteOn.class);
     }
 }
