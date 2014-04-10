@@ -1,7 +1,5 @@
 package com.teslacoil.bttc;
 
-import android.bluetooth.BluetoothAdapter;
-
 import java.io.IOException;
 
 public class Interruptor {
@@ -13,34 +11,35 @@ public class Interruptor {
     public final static int MAX_TIME = 1500;
     public final static int MIN_FREQUENCY = 15;
     public final static int MAX_FREQUENCY = 2000;
-    private int volume = 128; // 1byte
-    private int period = 2560; // 2-3byte
-    private int time = 100; // delay time
-    private boolean active = false;
+    private int mVolume = 128; // 1byte
+    private int mPeriod = 2560; // 2-3byte
+    private int mTime = 100; // delay time
+    private boolean mActive = false;
+    private byte[] mPack = new byte[7];
 
     BluetoothConnector btc = null;
-    private byte[] pack = new byte[7];
+
 
     public Interruptor() {
-        pack[0] = (byte)0xFF;
-        pack[6] = (byte)0xFF;
+        mPack[0] = (byte)0xFF;
+        mPack[6] = (byte)0xFF;
     }
 
-    public void setActive(boolean status) {active = status;}
-
-    public boolean isActive() {return active;}
+    public void enable() {mActive = true;}
+    public void disable() {mActive = false;}
+    public boolean isEnabled() {return mActive;}
 
     // use only this to set volume
     protected void setVolume(int vol) {
-        if((double)period/vol < 10)
-            volume = (int)Math.ceil((double)period/10);
+        if((double) mPeriod /vol < 10)
+            mVolume = (int)Math.ceil((double) mPeriod /10);
         else if(vol > MAX_VOLUME)
-            volume = MAX_VOLUME;
+            mVolume = MAX_VOLUME;
         else if (vol < MIN_VOLUME)
-            volume = MIN_VOLUME;
+            mVolume = MIN_VOLUME;
         else
-            volume = vol;
-        if(isActive()) {
+            mVolume = vol;
+        if(mActive) {
             try {
                 send();
             }
@@ -55,23 +54,23 @@ public class Interruptor {
     }
 
     protected void setTime(int t) {
-        time = t;
-        if(time < MIN_TIME)
-            time = MIN_TIME;
-        else if (time > MAX_TIME)
-            time = MAX_TIME;
+        mTime = t;
+        if(mTime < MIN_TIME)
+            mTime = MIN_TIME;
+        else if (mTime > MAX_TIME)
+            mTime = MAX_TIME;
     }
 
     // use only this to set frequence
     protected void setFrequency(int freq) {
-        period = (int)Math.ceil(1.0/freq*1000000);
-        if(period < MIN_PERIOD)
-            period = MIN_PERIOD;
-        else if(period >MAX_PERIOD)
-            period = MAX_PERIOD;
-        if((double)period/volume < 10)
-            volume = (int)Math.ceil((double)period/10);
-        if(isActive()) {
+        mPeriod = (int)Math.ceil(1.0/freq*1000000);
+        if(mPeriod < MIN_PERIOD)
+            mPeriod = MIN_PERIOD;
+        else if(mPeriod >MAX_PERIOD)
+            mPeriod = MAX_PERIOD;
+        if((double) mPeriod / mVolume < 10)
+            mVolume = (int)Math.ceil((double) mPeriod /10);
+        if(mActive) {
             try {
                 send();
             }
@@ -95,39 +94,39 @@ public class Interruptor {
     public void send() throws IOException, InterruptedException {
         if(btc != null) {
             pack();
-            btc.send(pack);
-            if (!isActive())
+            btc.send(mPack);
+            if (!mActive)
                 off();
         }
     }
 
     protected void off() throws IOException, InterruptedException {
         if(btc != null) {
-            int tmpVolume = volume;
-            volume = 0;
+            int tmpVolume = mVolume;
+            mVolume = 0;
             pack();
             try {
-                Thread.sleep(time);
+                Thread.sleep(mTime);
             } catch(InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
-            btc.send(pack);
-            volume = tmpVolume;
+            btc.send(mPack);
+            mVolume = tmpVolume;
         }
     }
 
     protected void pack() {
-        byte packageVolLow = (byte) (volume & 0x7F);
-        byte packageVolHigh = (byte) ((volume & 0x80) >>> 7);
+        byte packageVolLow = (byte) (mVolume & 0x7F);
+        byte packageVolHigh = (byte) ((mVolume & 0x80) >>> 7);
 
-        byte packageT1 = (byte)(period & 0x7F);
-        byte packageT2 = (byte)((period >>> 7 ) & 0x7F);
-        byte packageT3 = (byte)((period >>> 14) & 0x7F);
+        byte packageT1 = (byte)(mPeriod & 0x7F);
+        byte packageT2 = (byte)((mPeriod >>> 7 ) & 0x7F);
+        byte packageT3 = (byte)((mPeriod >>> 14) & 0x7F);
 
-        pack[1] = packageVolLow;
-        pack[2] = packageVolHigh;
-        pack[3] = packageT1;
-        pack[4] = packageT2;
-        pack[5] = packageT3;
+        mPack[1] = packageVolLow;
+        mPack[2] = packageVolHigh;
+        mPack[3] = packageT1;
+        mPack[4] = packageT2;
+        mPack[5] = packageT3;
     }
 }

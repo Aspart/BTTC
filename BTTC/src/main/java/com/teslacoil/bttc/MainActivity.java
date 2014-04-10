@@ -305,11 +305,11 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (!mBluetoothConnector.isBTEnabled()) {
+                        if (!mBluetoothConnector.isEnabled()) {
                             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
                         }
-                        if(mBluetoothConnector.isActive()) {
+                        if(mBluetoothConnector.isConnected()) {
                             try {
                                 mBluetoothConnector.close();
                                 button.setText("Connect");
@@ -359,7 +359,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     @Override
                     public void onClick(View v) {
                         try {
-                            mInterruptor.setActive(false);
+                            mInterruptor.enable();
                             mInterruptor.send();
                         }
                         catch(IOException e) {
@@ -381,8 +381,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(mInterruptor.isActive()) {
-                            mInterruptor.setActive(false);
+                        if(mInterruptor.isEnabled()) {
+                            mInterruptor.disable();
                             try {
                                 mInterruptor.send();
                             }
@@ -393,7 +393,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             button.setBackgroundColor(Color.DKGRAY);
                         }
                         else {
-                            mInterruptor.setActive(true);
+                            mInterruptor.enable();
                             try {
                                 mInterruptor.send();
                             } catch (Exception e) {
