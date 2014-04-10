@@ -4,13 +4,14 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
-public class BluetoothConnector extends Activity{
+public class BluetoothConnector {
     final private static UUID DEVICE_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 
     private BluetoothAdapter mAdapter = null;  // this device adapter
@@ -88,11 +89,19 @@ public class BluetoothConnector extends Activity{
         mSocket = null;
     }
 
-    void send(byte[] msg) throws IOException, InterruptedException {
+    void send(byte[] msg) {
         if(mOutputStream != null) {
             for(byte b : msg) {
-                mOutputStream.write(b);
-                Thread.sleep(0,20000);
+                try {
+                    mOutputStream.write(b);
+                } catch (IOException e) {
+                    Log.e("BluetoothConnector", e.getMessage());
+                }
+                try {
+                    Thread.sleep(0, 20000);
+                } catch (InterruptedException e) {
+                    Log.e("BluetoothConnector", e.getMessage());
+                }
             }
         }
     }

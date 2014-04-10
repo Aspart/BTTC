@@ -19,7 +19,6 @@ public class Interruptor {
 
     BluetoothConnector btc = null;
 
-
     public Interruptor() {
         mPack[0] = (byte)0xFF;
         mPack[6] = (byte)0xFF;
@@ -40,12 +39,7 @@ public class Interruptor {
         else
             mVolume = vol;
         if(mActive) {
-            try {
-                send();
-            }
-            catch (Exception e) {
-
-            }
+            send();
         }
     }
 
@@ -71,12 +65,7 @@ public class Interruptor {
         if((double) mPeriod / mVolume < 10)
             mVolume = (int)Math.ceil((double) mPeriod /10);
         if(mActive) {
-            try {
-                send();
-            }
-            catch (Exception e) {
-
-            }
+            send();
         }
     }
 
@@ -91,7 +80,7 @@ public class Interruptor {
         send();
     }
 
-    public void send() throws IOException, InterruptedException {
+    public void send() {
         if(btc != null) {
             pack();
             btc.send(mPack);
@@ -100,7 +89,7 @@ public class Interruptor {
         }
     }
 
-    protected void off() throws IOException, InterruptedException {
+    protected void off() {
         if(btc != null) {
             int tmpVolume = mVolume;
             mVolume = 0;

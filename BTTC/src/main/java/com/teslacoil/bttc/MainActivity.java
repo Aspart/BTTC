@@ -5,18 +5,11 @@ import java.util.Locale;
 import java.util.Set;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
-import android.os.Environment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
@@ -56,7 +49,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.ac_activity_main);
 
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
@@ -358,19 +351,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        try {
-                            mInterruptor.enable();
-                            mInterruptor.send();
-                        }
-                        catch(IOException e) {
-                            System.out.println("IO error in setOnClickListener");
-                        }
-                        catch (InterruptedException e) {
-                            System.out.println("Interrupted error in setOnClickListener");
-                        }
-                        catch (NullPointerException e) {
-                            System.out.println("NULL interrupter error");
-                        }
+                        mInterruptor.enable();
+                        mInterruptor.send();
                     }
                 });
         }
@@ -383,22 +365,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     public void onClick(View v) {
                         if(mInterruptor.isEnabled()) {
                             mInterruptor.disable();
-                            try {
-                                mInterruptor.send();
-                            }
-                            catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
+                            mInterruptor.send();
                             button.setText("Loop");
                             button.setBackgroundColor(Color.DKGRAY);
                         }
                         else {
                             mInterruptor.enable();
-                            try {
-                                mInterruptor.send();
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
+                            mInterruptor.send();
                             button.setText("Off");
                             button.setBackgroundColor(Color.RED);
                         }
@@ -409,7 +382,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_iter, container, false);
+            return inflater.inflate(R.layout.ac_iter_fragment, container, false);
         }
 
         private void getBluetoothConnector() {
@@ -512,7 +485,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_midi, container, false);
+            return inflater.inflate(R.layout.ac_midi_fragment, container, false);
         }
 
         @Override
