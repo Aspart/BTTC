@@ -41,7 +41,10 @@ public class BluetoothConnector {
                     if(!isCancelled()) {
                         try {
                             if(mOutputStream != null) {
-                                mOutputStream.write(msg);
+                                for(byte b : msg) {
+                                    mOutputStream.write(b);
+                                    Thread.sleep(0,20000);
+                                }
                             }
                         }
                         catch (Exception e) {
@@ -69,7 +72,11 @@ public class BluetoothConnector {
         protected String doInBackground(String... params) {
             try {
                 if(mOutputStream != null) {
-                    mOutputStream.write(msg);
+                    for(byte b : msg) {
+                        mOutputStream.write(b);
+                        Thread.sleep(0,20000);
+                    }
+
                 }
             }
             catch (Exception e) {
@@ -174,7 +181,13 @@ public class BluetoothConnector {
     }
     void send(byte[] msg) throws IOException, InterruptedException {
         //new SendMsgTask(msg).execute();
-        mOutputStream.write(msg);
+        if(mOutputStream != null) {
+            for(byte b : msg) {
+                mOutputStream.write(b);
+                Thread.sleep(0,20000);
+            }
+
+        }
     }
 
 
