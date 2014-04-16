@@ -9,7 +9,7 @@
     tools:context="com.teslacoil.bttc.MainActivity$PlaceholderFragment">
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="130dp"
         android:layout_height="wrap_content"
         android:text="Play"
         android:id="@+id/playButton"
@@ -20,34 +20,90 @@
         android:layout_marginLeft="15dp" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:text="Open"
+        android:text="Add"
         android:id="@+id/openButton"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="15dp" />
+
+    <Button
+        android:layout_width="130dp"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:id="@+id/stopButton"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_marginRight="15dp"
         android:layout_marginBottom="10dp" />
 
-    <TextView
+    <SeekBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:id="@+id/trackName"
+        android:id="@+id/seekBar"
+        android:layout_above="@+id/playButton"
+        android:layout_alignLeft="@+id/playButton"
+        android:layout_alignStart="@+id/playButton"
+        android:layout_alignRight="@+id/stopButton"
+        android:layout_alignEnd="@+id/stopButton"
+        android:layout_marginBottom="15dp" />
+
+    <ToggleButton
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="Connect"
+        android:id="@+id/connectButton"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:text="Sample Track Name" />
+        android:checked="false"
+        android:textOn="Disconnect"
+        android:textOff="Connect"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="15dp" />
 
-    <Button
+    <Spinner
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/ch2"
+        android:layout_alignBottom="@+id/seekBar"
+        android:layout_alignRight="@+id/stopButton"
+        android:layout_alignEnd="@+id/stopButton"
+        android:layout_marginBottom="50dp" />
+
+    <Spinner
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/ch1"
+        android:layout_alignBottom="@+id/seekBar"
+        android:layout_alignLeft="@+id/seekBar"
+        android:layout_alignStart="@+id/seekBar"
+        android:layout_marginBottom="50dp" />
+
+    <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Stop"
-        android:id="@+id/stopButton"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/playButton"
-        android:layout_marginLeft="15dp"
-        android:layout_marginBottom="10dp" />
+        android:id="@+id/listView"
+        android:layout_below="@+id/connectButton"
+        android:layout_alignLeft="@+id/connectButton"
+        android:layout_alignStart="@+id/connectButton"
+        android:layout_alignBottom="@+id/ch2"
+        android:layout_alignRight="@+id/stopButton"
+        android:layout_alignEnd="@+id/stopButton"
+        android:layout_marginBottom="100dp"
+        android:layout_marginTop="15dp" />
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="Remove"
+        android:id="@+id/button"
+        android:layout_alignTop="@+id/openButton"
+        android:layout_toLeftOf="@+id/openButton"
+        android:layout_marginRight="10dp" />
 
 </RelativeLayout>

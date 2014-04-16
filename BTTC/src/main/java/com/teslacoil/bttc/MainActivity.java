@@ -477,8 +477,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                                 public void OnSelectedFile(String fileName) {
                                     mMidiPlayer = new MIDIPlayer(fileName, interruptor);
                                     mMidiPlayer.run(fileName);
-                                    TextView tv = (TextView) getView().findViewById(R.id.trackName);
-                                    tv.setText(mMidiPlayer.getTrackName());
                                 }
                             });
                     fileDialog.show();
