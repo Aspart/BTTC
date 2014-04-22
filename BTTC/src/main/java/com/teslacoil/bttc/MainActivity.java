@@ -24,14 +24,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
     private final static int REQUEST_ENABLE_BT = 1;
+    Fragment mIterFragment;
+    Fragment mMIDIFragment;
     public static BluetoothConnector bluetoothConnector;
     public static Interruptor interruptor;
+
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -50,6 +55,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            //Restore the fragment's instance
+            mIterFragment = getSupportFragmentManager().getFragment(
+                    savedInstanceState, "mIterFragment");
+            mMIDIFragment = getSupportFragmentManager().getFragment(
+                    savedInstanceState, "mMIDIFragment");
+        }
         setContentView(R.layout.ac_activity_main);
 
         // Set up the action bar.
@@ -87,6 +99,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //Save the fragment's instance
+        getSupportFragmentManager().putFragment(outState, "mIterFragment", mIterFragment);
+        getSupportFragmentManager().putFragment(outState, "mMIDIFragment", mMIDIFragment);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -159,6 +178,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     return getString(R.string.title_section2).toUpperCase(l);
             }
             return null;
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            Fragment fragment = (Fragment) super.instantiateItem(container, position);
+            fragments[position] = fragment;
+            return fragment;
         }
     }
 
@@ -294,19 +320,19 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         }
 
         private void addConnectButtonListener () {
-            final Button button= (Button) getView().findViewById(R.id.connectButton);
-            if(button != null)
-                button.setOnClickListener(new View.OnClickListener() {
+            final ToggleButton button= (ToggleButton) getView().findViewById(R.id.connectButton);
+            if(button != null) {
+                button.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
-                    public void onClick(View v) {
+                    public void onCheckedChanged(CompoundButton toggleButton, boolean isChecked) {
                         if (!bluetoothConnector.isEnabled()) {
                             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
                         }
-                        if(bluetoothConnector.isConnected()) {
+                        if(!button.isChecked()) {
                             try {
                                 bluetoothConnector.close();
-                                button.setText("Connect");
+                                button.setChecked(false);
                                 Toast.makeText(getActivity(), "Disconnected", Toast.LENGTH_LONG).show();
                             }
                             catch(Exception e) {
@@ -331,7 +357,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                                             try {
                                                 boolean ret = bluetoothConnector.connectDevice((BluetoothDevice) bondedDevices.toArray()[item]);
                                                 if (ret) {
-                                                    button.setText("Disconnect");
+                                                    button.setChecked(true);
                                                     Toast.makeText(getActivity(), "Conected", Toast.LENGTH_LONG).show();
                                                 } else {
                                                     Toast.makeText(getActivity(), "Filed to connect", Toast.LENGTH_LONG).show();
@@ -342,8 +368,59 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                                         }
                                     }).setCancelable(true).setNegativeButton("Cancel", null).create().show();
                         }
+                        button.setChecked(false);
                     }
                 });
+            }
+//            if(button != null)
+//                button.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        if (!bluetoothConnector.isEnabled()) {
+//                            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//                            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+//                        }
+//                        if(button.isChecked()) {
+//                            try {
+//                                bluetoothConnector.close();
+//                                button.setChecked(false);
+//                                Toast.makeText(getActivity(), "Disconnected", Toast.LENGTH_LONG).show();
+//                            }
+//                            catch(Exception e) {
+//                                throw new RuntimeException(e);
+//                            }
+//                        }
+//                        else {
+//                            final Set<BluetoothDevice> bondedDevices = bluetoothConnector.getPaired();
+//
+//                            final String[] mDevicesName = new String[bondedDevices.size()];
+//                            int i = 0;
+//                            for(BluetoothDevice d : bondedDevices) {
+//                                mDevicesName[i] = d.getName();
+//                                i++;
+//                            }
+//
+//                            new AlertDialog.Builder(getActivity())
+//                                    .setTitle("Select device")
+//                                    .setItems(mDevicesName, new DialogInterface.OnClickListener() {
+//                                        @Override
+//                                        public void onClick(DialogInterface dialog, int item) {
+//                                            try {
+//                                                boolean ret = bluetoothConnector.connectDevice((BluetoothDevice) bondedDevices.toArray()[item]);
+//                                                if (ret) {
+//                                                    button.setChecked(true);
+//                                                    Toast.makeText(getActivity(), "Conected", Toast.LENGTH_LONG).show();
+//                                                } else {
+//                                                    Toast.makeText(getActivity(), "Filed to connect", Toast.LENGTH_LONG).show();
+//                                                }
+//                                            } catch (IOException e) {
+//                                                throw new RuntimeException(e);
+//                                            }
+//                                        }
+//                                    }).setCancelable(true).setNegativeButton("Cancel", null).create().show();
+//                        }
+//                    }
+//                });
         }
 
         private void addSingleButtonListener () {
@@ -409,8 +486,18 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             addConnectButtonListener();
             addSingleButtonListener();
             addLoopButtonListener();
-
             }
+
+        @Override
+        public void onSaveInstanceState(Bundle savedInstanceState) {
+            super.onSaveInstanceState(savedInstanceState);
+            // Restore UI state from the savedInstanceState.
+            // This bundle has also been passed to onCreate.
+            boolean myBoolean = savedInstanceState.getBoolean("MyBoolean");
+            double myDouble = savedInstanceState.getDouble("myDouble");
+            int myInt = savedInstanceState.getInt("MyInt");
+            String myString = savedInstanceState.getString("MyString");
+        }
     }
 
     public static class MIDIFragment extends Fragment {

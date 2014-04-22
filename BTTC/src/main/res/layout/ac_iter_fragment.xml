@@ -22,11 +22,11 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Vol"
         android:id="@+id/volText"
-        android:layout_alignParentTop="true"
+        android:minWidth="65dp"
+        android:layout_below="@+id/connectButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:minWidth="65dp"
-        android:layout_marginTop="10dp" />
+        android:layout_marginTop="15dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -132,18 +132,7 @@
         android:layout_marginTop="10dp" />
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Connect"
-        android:id="@+id/connectButton"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="15dp"
-        android:layout_marginBottom="10dp" />
-
-    <Button
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:text="Loop"
         android:id="@+id/loopButton"
@@ -154,12 +143,37 @@
         android:layout_marginLeft="15dp" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:text="Single"
         android:id="@+id/singleButton"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="10dp" />
+
+    <ToggleButton
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="Connect"
+        android:id="@+id/connectButton"
+        android:textOff="Connect"
+        android:textOn="Disonnect"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:checked="false"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="15dp" />
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:id="@+id/stopButton"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="15dp" />
 
 </RelativeLayout>
